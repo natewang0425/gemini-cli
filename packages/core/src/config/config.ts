@@ -210,6 +210,7 @@ export interface ConfigParameters {
   openaiModel?: string;
   openaiGatewayUrl?: string;
   openaiModelVersion?: string;
+  openaiUserId?: string;
 }
 
 export class Config {
@@ -284,6 +285,7 @@ export class Config {
   private readonly openaiModel: string | undefined;
   private readonly openaiGatewayUrl: string | undefined;
   private readonly openaiModelVersion: string | undefined;
+  private readonly openaiUserId: string | undefined;
   private initialized: boolean = false;
   readonly storage: Storage;
   private readonly fileExclusions: FileExclusions;
@@ -361,6 +363,7 @@ export class Config {
     this.openaiModel = params.openaiModel;
     this.openaiGatewayUrl = params.openaiGatewayUrl;
     this.openaiModelVersion = params.openaiModelVersion;
+    this.openaiUserId = params.openaiUserId;
     this.storage = new Storage(this.targetDir);
     this.enablePromptCompletion = params.enablePromptCompletion ?? false;
     this.fileExclusions = new FileExclusions(this);
@@ -814,6 +817,10 @@ export class Config {
 
   getOpenAIModelVersion(): string | undefined {
     return this.openaiModelVersion;
+  }
+
+  getOpenAIUserId(): string | undefined {
+    return this.openaiUserId;
   }
 
   async createToolRegistry(): Promise<ToolRegistry> {

@@ -170,11 +170,13 @@ export async function createContentGenerator(
     if (!config.apiKey) {
       throw new Error('OPENAI_API_KEY is not set.');
     }
+    const openaiUserId =
+      process.env['OPENAI_USER_ID'] || gcConfig.getOpenAIUserId();
     const { OpenAIContentGenerator } = await import(
       './openaiContentGenerator.js'
     );
     return new LoggingContentGenerator(
-      new OpenAIContentGenerator(config.apiKey, config.model, config.proxy),
+      new OpenAIContentGenerator(config.apiKey, config.model, config.proxy, openaiUserId),
       gcConfig,
     );
   }

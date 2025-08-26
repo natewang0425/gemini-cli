@@ -24,10 +24,12 @@ import { toContents } from '../code_assist/converter.js';
 export class OpenAIContentGenerator implements ContentGenerator {
   private openai: OpenAI | undefined; // Use any to avoid import issues during build
   private model: string;
+  private userId?: string;
 
-  constructor(apiKey: string, model: string, proxy?: string) {
+  constructor(apiKey: string, model: string, proxy?: string, userId?: string) {
     // Dynamic import will be handled at runtime
     this.model = model;
+    this.userId = userId;
     this.initializeOpenAI(apiKey, proxy);
   }
 
@@ -36,9 +38,16 @@ export class OpenAIContentGenerator implements ContentGenerator {
       const openaiModule = await import('openai');
       const OpenAI =
         openaiModule.default || openaiModule.OpenAI || openaiModule;
+      
+      const defaultHeaders: Record<string, string> = {};
+      if (this.userId) {
+        defaultHeaders['X-User-Id'] = this.userId;
+      }
+      
       this.openai = new OpenAI({
         apiKey,
         baseURL: proxy ? `${proxy}/v1` : undefined,
+        defaultHeaders,
       });
     } catch (_error) {
       throw new Error(

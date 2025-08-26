@@ -193,6 +193,7 @@ OPENAI_API_KEY=your-openai-api-key-here
 OPENAI_BASE_URL=https://api.openai.com/v1
 OPENAI_MODEL_NAME=gpt-4
 OPENAI_API_VERSION=2024-02-01
+OPENAI_USER_ID=your-user-id-here
 ```
 
 Then run:
@@ -200,6 +201,23 @@ Then run:
 ```bash
 gemini --openai-model gpt-4
 ```
+
+#### X-User-Id Header Support
+
+Gemini CLI supports sending a custom `X-User-Id` header with OpenAI requests for user tracking and analytics. This can be configured in multiple ways:
+
+```bash
+# Using command line option
+gemini --openai-model gpt-4 --openai-user-id "user-123"
+
+# Using environment variable
+export OPENAI_USER_ID="user-123"
+gemini --openai-model gpt-4
+
+# Using .env file (add OPENAI_USER_ID as shown above)
+```
+
+The `X-User-Id` header will be automatically included in all OpenAI API requests when configured, enabling better user tracking and analytics in your OpenAI usage logs.
 
 For Google Workspace accounts and other authentication methods, see the [authentication guide](./docs/cli/authentication.md).
 

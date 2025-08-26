@@ -79,6 +79,7 @@ export interface CliArgs {
   openaiModel: string | undefined;
   openaiGatewayUrl: string | undefined;
   openaiModelVersion: string | undefined;
+  openaiUserId: string | undefined;
 }
 
 export async function parseArguments(): Promise<CliArgs> {
@@ -258,6 +259,11 @@ export async function parseArguments(): Promise<CliArgs> {
         .option('openai-model-version', {
           type: 'string',
           description: 'OpenAI model version.',
+        })
+        .option('openai-user-id', {
+          type: 'string',
+          description: 'OpenAI user ID for X-User-Id header.',
+          default: process.env['OPENAI_USER_ID'],
         })
 
         .check((argv) => {
@@ -589,6 +595,7 @@ export async function loadCliConfig(
     openaiModel: argv.openaiModel || settings.openaiModel,
     openaiGatewayUrl: argv.openaiGatewayUrl || settings.openaiGatewayUrl,
     openaiModelVersion: argv.openaiModelVersion || settings.openaiModelVersion,
+    openaiUserId: argv.openaiUserId || settings.openaiUserId,
   });
 
   // Auto-detect OpenAI usage when --openai-model is specified

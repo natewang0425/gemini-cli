@@ -49,6 +49,7 @@ Add to your `~/.gemini/settings.json`:
 | Model         | `--openai-model`         | `OPENAI_MODEL`         | OpenAI model to use                          |
 | Gateway URL   | `--openai-gateway-url`   | `OPENAI_GATEWAY_URL`   | Custom API endpoint (for Azure OpenAI, etc.) |
 | Model Version | `--openai-model-version` | `OPENAI_MODEL_VERSION` | Specific model version                       |
+| User ID       | `--openai-user-id`       | `OPENAI_USER_ID`       | User ID for X-User-Id header (tracking/analytics) |
 
 ### Configuration Examples
 
@@ -250,6 +251,72 @@ Update your `~/.gemini/settings.json`:
 | Models          | Gemini 2.5 Pro/Flash | GPT-4, GPT-3.5-turbo            |
 
 ## Advanced Configuration
+
+### User Tracking with X-User-Id Header
+
+Gemini CLI supports sending a custom `X-User-Id` header with OpenAI requests for user tracking and analytics. This is useful for:
+
+- **User analytics**: Track usage patterns by user
+- **Cost attribution**: Attribute API costs to specific users
+- **Rate limiting**: Implement per-user rate limiting
+- **Audit logging**: Maintain detailed usage logs
+
+#### Configuration Methods
+
+**Environment Variable**:
+```bash
+export OPENAI_USER_ID="user-123"
+gemini --openai-model gpt-4
+```
+
+**CLI Argument**:
+```bash
+gemini --openai-model gpt-4 --openai-user-id "user-123"
+```
+
+**Settings File**:
+Add to your `~/.gemini/settings.json`:
+```json
+{
+  "openaiApiKey": "sk-your-api-key-here",
+  "openaiModel": "gpt-4",
+  "openaiUserId": "user-123"
+}
+```
+
+**Project .env File**:
+```bash
+OPENAI_API_KEY=sk-your-api-key-here
+OPENAI_MODEL=gpt-4
+OPENAI_USER_ID=user-123
+```
+
+#### Usage Examples
+
+**Individual User Tracking**:
+```bash
+# Track usage for specific user
+export OPENAI_USER_ID="john.doe@company.com"
+gemini --openai-model gpt-4
+> Analyze this codebase for security vulnerabilities
+```
+
+**Team/Department Tracking**:
+```bash
+# Track usage by team
+export OPENAI_USER_ID="engineering-team"
+gemini --openai-model gpt-4
+> Generate unit tests for this module
+```
+
+**Session-based Tracking**:
+```bash
+# Track by session ID
+SESSION_ID=$(uuidgen)
+gemini --openai-model gpt-4 --openai-user-id "session-${SESSION_ID}"
+```
+
+The `X-User-Id` header will appear in your OpenAI API logs and can be used with OpenAI's usage tracking and analytics features.
 
 ### Custom Headers
 

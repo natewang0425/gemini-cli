@@ -526,6 +526,15 @@ export const SETTINGS_SCHEMA = {
     description: 'OpenAI model version.',
     showInDialog: false,
   },
+  openaiUserId: {
+    type: 'string',
+    label: 'OpenAI User ID',
+    category: 'OpenAI',
+    requiresRestart: false,
+    default: undefined as string | undefined,
+    description: 'OpenAI user ID for X-User-Id header.',
+    showInDialog: false,
+  },
   hasSeenIdeIntegrationNudge: {
     type: 'boolean',
     label: 'Has Seen IDE Integration Nudge',
