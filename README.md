@@ -175,9 +175,29 @@ gemini
 - **Model version control**: Specify exact model versions
 - **Usage-based billing**: Pay per token with OpenAI's pricing
 
+#### Using Environment Variables
+
 ```bash
 # Get your key from https://platform.openai.com/api-keys
 export OPENAI_API_KEY="YOUR_API_KEY"
+gemini --openai-model gpt-4
+```
+
+#### Using .env File
+
+For persistent configuration, create a `.env` file in your project root:
+
+```bash
+# OpenAI Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL_NAME=gpt-4
+OPENAI_API_VERSION=2024-02-01
+```
+
+Then run:
+
+```bash
 gemini --openai-model gpt-4
 ```
 
