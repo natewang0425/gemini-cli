@@ -5,6 +5,7 @@ Within Gemini CLI, `packages/cli` is the frontend for users to send and receive 
 ## Navigating this section
 
 - **[Authentication](./authentication.md):** A guide to setting up authentication with Google's AI services.
+- **[OpenAI Integration](./openai.md):** Complete guide to using OpenAI models (GPT-4, GPT-3.5-turbo) with Gemini CLI.
 - **[Commands](./commands.md):** A reference for Gemini CLI commands (e.g., `/help`, `/tools`, `/theme`).
 - **[Configuration](./configuration.md):** A guide to tailoring Gemini CLI behavior using configuration files.
 - **[Enterprise](./enterprise.md):** A guide to enterprise configuration.
@@ -25,5 +26,9 @@ echo "What is fine tuning?" | gemini
 Gemini CLI executes the command and prints the output to your terminal. Note that you can achieve the same behavior by using the `--prompt` or `-p` flag. For example:
 
 ```bash
+# Using Gemini (default)
 gemini -p "What is fine tuning?"
+
+# Using OpenAI GPT-4
+gemini --openai-model gpt-4 -p "What is fine tuning?"
 ```

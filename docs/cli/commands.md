@@ -392,3 +392,29 @@ The `!` prefix lets you interact with your system's shell directly from within G
 - **Caution for all `!` usage:** Commands you execute in shell mode have the same permissions and impact as if you ran them directly in your terminal.
 
 - **Environment Variable:** When a command is executed via `!` or in shell mode, the `GEMINI_CLI=1` environment variable is set in the subprocess's environment. This allows scripts or tools to detect if they are being run from within the Gemini CLI.
+
+## OpenAI Integration Commands
+
+Gemini CLI supports OpenAI models through command-line arguments. For complete OpenAI configuration options, see the [OpenAI Integration Guide](./openai.md) and [Configuration Guide](./configuration.md).
+
+### OpenAI CLI Arguments
+
+- **`--openai-api-key <api_key>`**: Specify OpenAI API key for the session
+- **`--openai-model <model>`**: Use a specific OpenAI model (e.g., `gpt-4`, `gpt-3.5-turbo`)
+- **`--openai-gateway-url <url>`**: Custom OpenAI API endpoint (for Azure OpenAI, etc.)
+- **`--openai-model-version <version>`**: Specific model version
+
+### Examples
+
+```bash
+# Use GPT-4 with API key
+gemini --openai-api-key "sk-your-key" --openai-model gpt-4
+
+# Use Azure OpenAI
+gemini --openai-model gpt-4 --openai-gateway-url "https://your-endpoint.openai.azure.com"
+
+# Non-interactive with OpenAI
+gemini --openai-model gpt-3.5-turbo -p "Explain this code"
+```
+
+For detailed setup instructions, authentication methods, and troubleshooting, see the [OpenAI Integration Guide](./openai.md).

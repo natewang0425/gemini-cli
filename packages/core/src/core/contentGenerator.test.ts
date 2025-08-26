@@ -115,6 +115,7 @@ describe('createContentGeneratorConfig', () => {
     setModel: vi.fn(),
     flashFallbackHandler: vi.fn(),
     getProxy: vi.fn(),
+    getOpenAIApiKey: vi.fn().mockReturnValue(undefined),
   } as unknown as Config;
 
   beforeEach(() => {

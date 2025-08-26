@@ -141,6 +141,10 @@ export class GeminiClient {
     this.chat = await this.startChat();
   }
 
+  getConfig(): Config {
+    return this.config;
+  }
+
   getContentGenerator(): ContentGenerator {
     if (!this.contentGenerator) {
       throw new Error('Content generator not initialized');
@@ -570,6 +574,7 @@ export class GeminiClient {
     // Use current model from config instead of hardcoded Flash model
     const modelToUse =
       model || this.config.getModel() || DEFAULT_GEMINI_FLASH_MODEL;
+
     try {
       const userMemory = this.config.getUserMemory();
       const systemInstruction = getCoreSystemPrompt(userMemory);
@@ -601,6 +606,7 @@ export class GeminiClient {
       });
 
       let text = getResponseText(result);
+
       if (!text) {
         const error = new Error(
           'API returned an empty response for generateJson.',
@@ -614,6 +620,7 @@ export class GeminiClient {
         throw error;
       }
 
+      // Handle different response formats from different models
       const prefix = '```json';
       const suffix = '```';
       if (text.startsWith(prefix) && text.endsWith(suffix)) {
@@ -624,6 +631,25 @@ export class GeminiClient {
         text = text
           .substring(prefix.length, text.length - suffix.length)
           .trim();
+      }
+
+      // For OpenAI models that may not respect JSON format, try to extract JSON from text
+      if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) {
+        // Try to find JSON-like content in the response
+        const jsonMatch = text.match(/\{[^}]*\}/);
+        if (jsonMatch) {
+          text = jsonMatch[0];
+        } else {
+          // If no JSON found, create a fallback response for nextSpeaker check
+          if (
+            contents.some((c) =>
+              c.parts?.some((p) => p.text?.includes('next_speaker')),
+            )
+          ) {
+            text =
+              '{"reasoning": "Unable to parse model response, defaulting to user turn", "next_speaker": "user"}';
+          }
+        }
       }
 
       try {

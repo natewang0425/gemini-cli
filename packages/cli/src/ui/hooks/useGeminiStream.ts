@@ -92,6 +92,10 @@ export const useGeminiStream = (
   const [pendingHistoryItemRef, setPendingHistoryItem] =
     useStateAndRef<HistoryItemWithoutId | null>(null);
   const processedMemoryToolsRef = useRef<Set<string>>(new Set());
+
+  // Fix for tool completion race condition - track ongoing submissions
+  const toolSubmissionInProgressRef = useRef(false);
+  const pendingToolSubmissionRef = useRef<TrackedToolCall[] | null>(null);
   const { startNewPrompt, getPromptCount } = useSessionStats();
   const storage = config.storage;
   const logger = useLogger(storage);
@@ -106,7 +110,14 @@ export const useGeminiStream = (
     useReactToolScheduler(
       async (completedToolCallsFromScheduler) => {
         // This onComplete is called when ALL scheduled tools for a given batch are done.
+        console.log(
+          '[DEBUG] useReactToolScheduler onComplete called with tools:',
+          completedToolCallsFromScheduler.length,
+        );
         if (completedToolCallsFromScheduler.length > 0) {
+          console.log(
+            '[DEBUG] Adding completed tools to history and handling submission',
+          );
           // Add the final state of these tools to the history for display.
           addItem(
             mapTrackedToolCallsToDisplay(
@@ -114,6 +125,16 @@ export const useGeminiStream = (
             ),
             Date.now(),
           );
+
+          // Fix for race condition: Check if submission is already in progress
+          if (toolSubmissionInProgressRef.current) {
+            console.log(
+              '[DEBUG] Tool submission already in progress, queuing for later',
+            );
+            pendingToolSubmissionRef.current =
+              completedToolCallsFromScheduler as TrackedToolCall[];
+            return;
+          }
 
           // Handle tool response submission immediately when tools complete
           await handleCompletedTools(
@@ -347,11 +368,53 @@ export const useGeminiStream = (
       currentGeminiMessageBuffer: string,
       userMessageTimestamp: number,
     ): string => {
+      // Enhanced logging for streaming diagnosis
+      console.log('=== STREAMING DEBUG START ===');
+      console.log('[STREAM] Event value received:', JSON.stringify(eventValue));
+      console.log('[STREAM] Event value length:', eventValue.length);
+      console.log('[STREAM] Current buffer length:', currentGeminiMessageBuffer.length);
+      console.log('[STREAM] Current buffer content:', JSON.stringify(currentGeminiMessageBuffer));
+      console.log('[STREAM] Buffer ends with event value?', currentGeminiMessageBuffer.endsWith(eventValue));
+      console.log('[STREAM] Event value starts with buffer?', eventValue.startsWith(currentGeminiMessageBuffer));
+      
       if (turnCancelledRef.current) {
         // Prevents additional output after a user initiated cancel.
+        console.log('[DEBUG] handleContentEvent early return - turn cancelled');
         return '';
       }
-      let newGeminiMessageBuffer = currentGeminiMessageBuffer + eventValue;
+
+      // Fix for content buffer management - prevent duplicate content addition
+      if (!eventValue || eventValue.length === 0) {
+        console.log(
+          '[DEBUG] handleContentEvent early return - empty event value',
+        );
+        return currentGeminiMessageBuffer;
+      }
+
+      // Determine if this is incremental content or full content
+      let newGeminiMessageBuffer: string;
+      if (eventValue.startsWith(currentGeminiMessageBuffer)) {
+        // Server sends full accumulated content - extract only the new part
+        console.log('[STREAM] Server sending accumulated content - extracting new part');
+        const newContent = eventValue.substring(currentGeminiMessageBuffer.length);
+        console.log('[STREAM] New content extracted:', JSON.stringify(newContent));
+        newGeminiMessageBuffer = eventValue; // Use the full content from server
+      } else {
+        // Server sends incremental content - append to buffer
+        console.log('[STREAM] Server sending incremental content - appending');
+        newGeminiMessageBuffer = currentGeminiMessageBuffer + eventValue;
+      }
+      
+      // Additional fix: Prevent duplicate content display for OpenAI streaming
+      // If the new buffer is identical to current, skip the update to prevent cascading
+      if (newGeminiMessageBuffer === currentGeminiMessageBuffer) {
+        console.log('[STREAM] Buffer unchanged, skipping update to prevent duplicate display');
+        return currentGeminiMessageBuffer;
+      }
+      
+      console.log('[STREAM] Final buffer length:', newGeminiMessageBuffer.length);
+      console.log('[STREAM] Final buffer content:', JSON.stringify(newGeminiMessageBuffer));
+      console.log('=== STREAMING DEBUG END ===');
       if (
         pendingHistoryItemRef.current?.type !== 'gemini' &&
         pendingHistoryItemRef.current?.type !== 'gemini_content'
@@ -360,17 +423,32 @@ export const useGeminiStream = (
           addItem(pendingHistoryItemRef.current, userMessageTimestamp);
         }
         setPendingHistoryItem({ type: 'gemini', text: '' });
-        newGeminiMessageBuffer = eventValue;
+        // Fix: Don't reset the buffer - preserve the accumulated content
+        // The newGeminiMessageBuffer already contains the correct accumulated content
+        // from the logic above (lines 396-406)
       }
       // Split large messages for better rendering performance. Ideally,
       // we should maximize the amount of output sent to <Static />.
       const splitPoint = findLastSafeSplitPoint(newGeminiMessageBuffer);
       if (splitPoint === newGeminiMessageBuffer.length) {
         // Update the existing message with accumulated content
-        setPendingHistoryItem((item) => ({
-          type: item?.type as 'gemini' | 'gemini_content',
-          text: newGeminiMessageBuffer,
-        }));
+        // Fix: Only update if the content has actually changed and is significantly different
+        const currentText = pendingHistoryItemRef.current?.text || '';
+        
+        // For OpenAI streaming, avoid frequent updates that cause cascading display
+        // Only update if there's substantial new content (more than just a few characters)
+        const contentDiff = newGeminiMessageBuffer.length - currentText.length;
+        const shouldUpdate = currentText !== newGeminiMessageBuffer &&
+                           (contentDiff > 5 || newGeminiMessageBuffer.endsWith(' ') ||
+                            newGeminiMessageBuffer.endsWith('.') || newGeminiMessageBuffer.endsWith('!') ||
+                            newGeminiMessageBuffer.endsWith('?'));
+        
+        if (shouldUpdate) {
+          setPendingHistoryItem((item) => ({
+            type: item?.type as 'gemini' | 'gemini_content',
+            text: newGeminiMessageBuffer,
+          }));
+        }
       } else {
         // This indicates that we need to split up this Gemini Message.
         // Splitting a message is primarily a performance consideration. There is a
@@ -382,15 +460,20 @@ export const useGeminiStream = (
         // broken up so that there are more "statically" rendered.
         const beforeText = newGeminiMessageBuffer.substring(0, splitPoint);
         const afterText = newGeminiMessageBuffer.substring(splitPoint);
-        addItem(
-          {
-            type: pendingHistoryItemRef.current?.type as
-              | 'gemini'
-              | 'gemini_content',
-            text: beforeText,
-          },
-          userMessageTimestamp,
-        );
+
+        // Fix: Only add item if beforeText is not empty and different from current
+        const currentText = pendingHistoryItemRef.current?.text || '';
+        if (beforeText && beforeText !== currentText) {
+          addItem(
+            {
+              type: pendingHistoryItemRef.current?.type as
+                | 'gemini'
+                | 'gemini_content',
+              text: beforeText,
+            },
+            userMessageTimestamp,
+          );
+        }
         setPendingHistoryItem({ type: 'gemini_content', text: afterText });
         newGeminiMessageBuffer = afterText;
       }
@@ -544,23 +627,74 @@ export const useGeminiStream = (
       userMessageTimestamp: number,
       signal: AbortSignal,
     ): Promise<StreamProcessingStatus> => {
+      console.log('[DEBUG] processGeminiStreamEvents started');
       let geminiMessageBuffer = '';
       const toolCallRequests: ToolCallRequestInfo[] = [];
+
+      // Fix for stream event processing duplication - track processed events
+      const processedEventIds = new Set<string>();
+
       for await (const event of stream) {
+        console.log('=== EVENT PROCESSING DEBUG START ===');
+        console.log('[EVENT] Processing stream event type:', event.type);
+        
+        // Safe event value logging
+        if (event.type === ServerGeminiEventType.Content) {
+          console.log('[EVENT] Content event value:', JSON.stringify((event as ContentEvent).value));
+        } else if ('value' in event) {
+          console.log('[EVENT] Event has value property:', event.value);
+        } else {
+          console.log('[EVENT] Event has no value property');
+        }
+        
+        console.log('[EVENT] Current geminiMessageBuffer length:', geminiMessageBuffer.length);
+
+        // Generate unique event ID for deduplication - FIXED: Use actual event content for ID
+        const eventId = event.type === ServerGeminiEventType.Content
+          ? `${event.type}-${(event as ContentEvent).value.length}-${(event as ContentEvent).value.slice(-10)}` // Use content length and last 10 chars
+          : `${event.type}-${Date.now()}-${Math.random()}`;
+        
+        if (processedEventIds.has(eventId)) {
+          console.log('[EVENT] ⚠️  DUPLICATE EVENT DETECTED - Skipping:', event.type, eventId);
+          continue;
+        }
+        processedEventIds.add(eventId);
+        console.log('[EVENT] Event ID added to processed set:', eventId);
+
         switch (event.type) {
           case ServerGeminiEventType.Thought:
+            console.log('[EVENT] Setting thought:', event.value);
             setThought(event.value);
             break;
           case ServerGeminiEventType.Content:
+            console.log('[EVENT] Processing content event - calling handleContentEvent');
+            const previousBuffer = geminiMessageBuffer;
             geminiMessageBuffer = handleContentEvent(
               event.value,
               geminiMessageBuffer,
               userMessageTimestamp,
             );
+            console.log('[EVENT] Buffer changed from length', previousBuffer.length, 'to', geminiMessageBuffer.length);
             break;
-          case ServerGeminiEventType.ToolCallRequest:
-            toolCallRequests.push(event.value);
+          case ServerGeminiEventType.ToolCallRequest: {
+            // Fix for tool call request duplication - check for existing requests
+            const existingRequest = toolCallRequests.find(
+              (req) => req.callId === event.value.callId,
+            );
+            if (!existingRequest) {
+              console.log(
+                '[DEBUG] Adding new tool call request:',
+                event.value.callId,
+              );
+              toolCallRequests.push(event.value);
+            } else {
+              console.log(
+                '[DEBUG] Skipping duplicate tool call request:',
+                event.value.callId,
+              );
+            }
             break;
+          }
           case ServerGeminiEventType.UserCancelled:
             handleUserCancelledEvent(userMessageTimestamp);
             break;
@@ -594,8 +728,15 @@ export const useGeminiStream = (
             return unreachable;
           }
         }
+        console.log('=== EVENT PROCESSING DEBUG END ===');
+        console.log('');
       }
       if (toolCallRequests.length > 0) {
+        console.log(
+          '[DEBUG] Scheduling',
+          toolCallRequests.length,
+          'unique tool calls',
+        );
         scheduleToolCalls(toolCallRequests, signal);
       }
       return StreamProcessingStatus.Completed;
@@ -617,12 +758,23 @@ export const useGeminiStream = (
       options?: { isContinuation: boolean },
       prompt_id?: string,
     ) => {
+      console.log('[DEBUG] submitQuery called with:', {
+        queryType: typeof query,
+        isContinuation: options?.isContinuation,
+        streamingState,
+        prompt_id,
+      });
+
       if (
         (streamingState === StreamingState.Responding ||
           streamingState === StreamingState.WaitingForConfirmation) &&
         !options?.isContinuation
-      )
+      ) {
+        console.log(
+          '[DEBUG] submitQuery early return - already responding/waiting',
+        );
         return;
+      }
 
       const userMessageTimestamp = Date.now();
 
@@ -675,7 +827,11 @@ export const useGeminiStream = (
           return;
         }
 
-        if (pendingHistoryItemRef.current) {
+        // Only add pending history item if it has content and hasn't been added yet
+        if (
+          pendingHistoryItemRef.current &&
+          pendingHistoryItemRef.current.text?.trim()
+        ) {
           addItem(pendingHistoryItemRef.current, userMessageTimestamp);
           setPendingHistoryItem(null);
         }
@@ -725,9 +881,23 @@ export const useGeminiStream = (
 
   const handleCompletedTools = useCallback(
     async (completedToolCallsFromScheduler: TrackedToolCall[]) => {
-      if (isResponding) {
+      console.log(
+        '[DEBUG] handleCompletedTools called with:',
+        completedToolCallsFromScheduler.length,
+        'tools, isResponding:',
+        isResponding,
+      );
+
+      // Fix for race condition: Prevent concurrent submissions
+      if (isResponding || toolSubmissionInProgressRef.current) {
+        console.log(
+          '[DEBUG] handleCompletedTools early return - already responding or submission in progress',
+        );
         return;
       }
+
+      // Mark submission as in progress to prevent race conditions
+      toolSubmissionInProgressRef.current = true;
 
       const completedAndReadyToSubmitTools =
         completedToolCallsFromScheduler.filter(
@@ -827,13 +997,36 @@ export const useGeminiStream = (
         return;
       }
 
-      submitQuery(
-        responsesToSend,
-        {
-          isContinuation: true,
-        },
-        prompt_ids[0],
+      console.log(
+        '[DEBUG] handleCompletedTools calling submitQuery with continuation, responsesToSend length:',
+        responsesToSend.length,
       );
+
+      try {
+        await submitQuery(
+          responsesToSend,
+          {
+            isContinuation: true,
+          },
+          prompt_ids[0],
+        );
+      } finally {
+        // Clear submission flag and process any pending submissions
+        toolSubmissionInProgressRef.current = false;
+
+        // Process any queued tool submissions
+        if (pendingToolSubmissionRef.current) {
+          const pendingTools = pendingToolSubmissionRef.current;
+          pendingToolSubmissionRef.current = null;
+          console.log(
+            '[DEBUG] Processing queued tool submission with',
+            pendingTools.length,
+            'tools',
+          );
+          // Use setTimeout to avoid immediate recursion
+          setTimeout(() => handleCompletedTools(pendingTools), 0);
+        }
+      }
     },
     [
       isResponding,

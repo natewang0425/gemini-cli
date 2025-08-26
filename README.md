@@ -6,7 +6,7 @@
 
 ![Gemini CLI Screenshot](./docs/assets/gemini-screenshot.png)
 
-Gemini CLI is an open-source AI agent that brings the power of Gemini directly into your terminal. It provides lightweight access to Gemini, giving you the most direct path from your prompt to our model.
+Gemini CLI is an open-source AI agent that brings the power of multiple AI models directly into your terminal. It provides lightweight access to Gemini, OpenAI, and Vertex AI, giving you the most direct path from your prompt to leading AI models.
 
 ## 🚀 Why Gemini CLI?
 
@@ -164,6 +164,23 @@ export GOOGLE_GENAI_USE_VERTEXAI=true
 gemini
 ```
 
+### Option 4: OpenAI API Key
+
+**✨ Best for:** Developers who want to use OpenAI's GPT models
+
+**Benefits:**
+
+- **Access to GPT models**: GPT-4, GPT-4-turbo, GPT-3.5-turbo, and more
+- **Custom gateway support**: Use with Azure OpenAI or other OpenAI-compatible services
+- **Model version control**: Specify exact model versions
+- **Usage-based billing**: Pay per token with OpenAI's pricing
+
+```bash
+# Get your key from https://platform.openai.com/api-keys
+export OPENAI_API_KEY="YOUR_API_KEY"
+gemini --openai-model gpt-4
+```
+
 For Google Workspace accounts and other authentication methods, see the [authentication guide](./docs/cli/authentication.md).
 
 ## 🚀 Getting Started
@@ -185,7 +202,14 @@ gemini --include-directories ../lib,../docs
 #### Use specific model
 
 ```bash
+# Use Gemini model
 gemini -m gemini-2.5-flash
+
+# Use OpenAI model
+gemini --openai-model gpt-4
+
+# Use OpenAI with custom gateway (e.g., Azure OpenAI)
+gemini --openai-model gpt-4 --openai-gateway-url https://your-azure-endpoint.openai.azure.com
 ```
 
 #### Non-interactive mode for scripts
@@ -219,6 +243,7 @@ gemini
 
 - [**Quickstart Guide**](./docs/cli/index.md) - Get up and running quickly
 - [**Authentication Setup**](./docs/cli/authentication.md) - Detailed auth configuration
+- [**OpenAI Integration**](./docs/cli/openai.md) - Complete guide to using OpenAI models
 - [**Configuration Guide**](./docs/cli/configuration.md) - Settings and customization
 - [**Keyboard Shortcuts**](./docs/keyboard-shortcuts.md) - Productivity tips
 

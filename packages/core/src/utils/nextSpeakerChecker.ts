@@ -44,6 +44,15 @@ export async function checkNextSpeaker(
   geminiClient: GeminiClient,
   abortSignal: AbortSignal,
 ): Promise<NextSpeakerResponse | null> {
+  const config = geminiClient.getConfig();
+  const contentGenConfig = config.getContentGeneratorConfig();
+  if (contentGenConfig?.authType?.toString() === 'openai-api-key') {
+    return {
+      reasoning:
+        'Skipping next speaker check for OpenAI model to prevent compatibility issues',
+      next_speaker: 'user',
+    };
+  }
   // We need to capture the curated history because there are many moments when the model will return invalid turns
   // that when passed back up to the endpoint will break subsequent calls. An example of this is when the model decides
   // to respond with an empty part collection if you were to send that message back to the server it will respond with
@@ -124,10 +133,16 @@ export async function checkNextSpeaker(
     }
     return null;
   } catch (error) {
+    // For OpenAI models or other non-Gemini models, default to user turn to prevent infinite loops
     console.warn(
       'Failed to talk to Gemini endpoint when seeing if conversation should continue.',
       error,
     );
-    return null;
+    // Return a safe default that prevents recursive calls
+    return {
+      reasoning:
+        'Unable to determine next speaker due to API compatibility, defaulting to user turn',
+      next_speaker: 'user',
+    };
   }
 }

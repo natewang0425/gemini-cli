@@ -190,7 +190,7 @@ export async function main() {
 
   const argv = await parseArguments();
   const extensions = loadExtensions(workspaceRoot);
-  const config = await loadCliConfig(
+  const [config, selectedAuthType] = await loadCliConfig(
     settings.merged,
     extensions,
     sessionId,
@@ -224,7 +224,7 @@ export async function main() {
   }
 
   // Set a default auth type if one isn't set.
-  if (!settings.merged.selectedAuthType) {
+  if (!selectedAuthType) {
     if (process.env['CLOUD_SHELL'] === 'true') {
       settings.setValue(
         SettingScope.User,
@@ -261,17 +261,14 @@ export async function main() {
       : [];
     const sandboxConfig = config.getSandbox();
     if (sandboxConfig) {
-      if (
-        settings.merged.selectedAuthType &&
-        !settings.merged.useExternalAuth
-      ) {
+      if (selectedAuthType && !settings.merged.useExternalAuth) {
         // Validate authentication here because the sandbox will interfere with the Oauth2 web redirect.
         try {
-          const err = validateAuthMethod(settings.merged.selectedAuthType);
+          const err = await validateAuthMethod(selectedAuthType);
           if (err) {
             throw new Error(err);
           }
-          await config.refreshAuth(settings.merged.selectedAuthType);
+          await config.refreshAuth(selectedAuthType);
         } catch (err) {
           console.error('Error authenticating:', err);
           process.exit(1);
@@ -320,11 +317,11 @@ export async function main() {
   }
 
   if (
-    settings.merged.selectedAuthType === AuthType.LOGIN_WITH_GOOGLE &&
+    selectedAuthType === AuthType.LOGIN_WITH_GOOGLE &&
     config.isBrowserLaunchSuppressed()
   ) {
     // Do oauth before app renders to make copying the link possible.
-    await getOauthClient(settings.merged.selectedAuthType, config);
+    await getOauthClient(selectedAuthType, config);
   }
 
   if (config.getExperimentalZedIntegration()) {
@@ -368,7 +365,7 @@ export async function main() {
   });
 
   const nonInteractiveConfig = await validateNonInteractiveAuth(
-    settings.merged.selectedAuthType,
+    selectedAuthType,
     settings.merged.useExternalAuth,
     config,
   );

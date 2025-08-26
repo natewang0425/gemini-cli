@@ -17,6 +17,7 @@ import {
   setGeminiMdFilename as setServerGeminiMdFilename,
   getCurrentGeminiMdFilename,
   ApprovalMode,
+  AuthType,
   DEFAULT_GEMINI_MODEL,
   DEFAULT_GEMINI_EMBEDDING_MODEL,
   DEFAULT_MEMORY_FILE_FILTERING_OPTIONS,
@@ -74,6 +75,10 @@ export interface CliArgs {
   proxy: string | undefined;
   includeDirectories: string[] | undefined;
   screenReader: boolean | undefined;
+  openaiApiKey: string | undefined;
+  openaiModel: string | undefined;
+  openaiGatewayUrl: string | undefined;
+  openaiModelVersion: string | undefined;
 }
 
 export async function parseArguments(): Promise<CliArgs> {
@@ -236,6 +241,24 @@ export async function parseArguments(): Promise<CliArgs> {
           description: 'Enable screen reader mode for accessibility.',
           default: false,
         })
+        .option('openai-api-key', {
+          type: 'string',
+          description: 'OpenAI API key for authentication.',
+          default: process.env['OPENAI_API_KEY'],
+        })
+        .option('openai-model', {
+          type: 'string',
+          description: 'OpenAI model to use (e.g., gpt-4, gpt-3.5-turbo).',
+          default: process.env['OPENAI_MODEL_NAME'],
+        })
+        .option('openai-gateway-url', {
+          type: 'string',
+          description: 'Custom OpenAI gateway URL.',
+        })
+        .option('openai-model-version', {
+          type: 'string',
+          description: 'OpenAI model version.',
+        })
 
         .check((argv) => {
           if (argv.prompt && argv['promptInteractive']) {
@@ -322,7 +345,7 @@ export async function loadCliConfig(
   sessionId: string,
   argv: CliArgs,
   cwd: string = process.cwd(),
-): Promise<Config> {
+): Promise<[Config, AuthType | undefined]> {
   const debugMode =
     argv.debug ||
     [process.env['DEBUG'], process.env['DEBUG_MODE']].some(
@@ -475,7 +498,7 @@ export async function loadCliConfig(
   // The screen reader argument takes precedence over the accessibility setting.
   const screenReader =
     argv.screenReader ?? settings.accessibility?.screenReader ?? false;
-  return new Config({
+  const config = new Config({
     sessionId,
     embeddingModel: DEFAULT_GEMINI_EMBEDDING_MODEL,
     sandbox: sandboxConfig,
@@ -538,7 +561,12 @@ export async function loadCliConfig(
     cwd,
     fileDiscoveryService: fileService,
     bugCommand: settings.bugCommand,
-    model: argv.model || settings.model || DEFAULT_GEMINI_MODEL,
+    model:
+      argv.openaiModel ||
+      settings.openaiModel ||
+      argv.model ||
+      settings.model ||
+      DEFAULT_GEMINI_MODEL,
     extensionContextFilePaths,
     maxSessionTurns: settings.maxSessionTurns ?? -1,
     experimentalZedIntegration: argv.experimentalAcp || false,
@@ -557,7 +585,21 @@ export async function loadCliConfig(
     shouldUseNodePtyShell: settings.shouldUseNodePtyShell,
     skipNextSpeakerCheck: settings.skipNextSpeakerCheck,
     enablePromptCompletion: settings.enablePromptCompletion ?? false,
+    openaiApiKey: argv.openaiApiKey || settings.openaiApiKey,
+    openaiModel: argv.openaiModel || settings.openaiModel,
+    openaiGatewayUrl: argv.openaiGatewayUrl || settings.openaiGatewayUrl,
+    openaiModelVersion: argv.openaiModelVersion || settings.openaiModelVersion,
   });
+
+  // Auto-detect OpenAI usage when --openai-model is specified
+  if (argv.openaiModel || settings.openaiModel) {
+    // Set the selectedAuthType to use OpenAI when OpenAI model is specified
+    if (!settings.selectedAuthType) {
+      settings.selectedAuthType = AuthType.USE_OPENAI;
+    }
+  }
+
+  return [config, settings.selectedAuthType];
 }
 
 function allowedMcpServers(

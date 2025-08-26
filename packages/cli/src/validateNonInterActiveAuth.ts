@@ -15,6 +15,9 @@ function getAuthTypeFromEnv(): AuthType | undefined {
   if (process.env['GOOGLE_GENAI_USE_VERTEXAI'] === 'true') {
     return AuthType.USE_VERTEX_AI;
   }
+  if (process.env['OPENAI_API_KEY']) {
+    return AuthType.USE_OPENAI;
+  }
   if (process.env['GEMINI_API_KEY']) {
     return AuthType.USE_GEMINI;
   }
@@ -36,7 +39,7 @@ export async function validateNonInteractiveAuth(
   }
 
   if (!useExternalAuth) {
-    const err = validateAuthMethod(effectiveAuthType);
+    const err = await validateAuthMethod(effectiveAuthType);
     if (err != null) {
       console.error(err);
       process.exit(1);

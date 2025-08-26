@@ -88,6 +88,12 @@ class GeminiAgent {
           'Requires setting the `GEMINI_API_KEY` environment variable',
       },
       {
+        id: AuthType.USE_OPENAI,
+        name: 'Use OpenAI API key',
+        description:
+          'Requires setting the `OPENAI_API_KEY` environment variable',
+      },
+      {
         id: AuthType.USE_VERTEX_AI,
         name: 'Vertex AI',
         description: null,
@@ -121,12 +127,16 @@ class GeminiAgent {
     mcpServers,
   }: acp.NewSessionRequest): Promise<acp.NewSessionResponse> {
     const sessionId = randomUUID();
-    const config = await this.newSessionConfig(sessionId, cwd, mcpServers);
+    const [config, selectedAuthType] = await this.newSessionConfig(
+      sessionId,
+      cwd,
+      mcpServers,
+    );
 
     let isAuthenticated = false;
-    if (this.settings.merged.selectedAuthType) {
+    if (selectedAuthType) {
       try {
-        await config.refreshAuth(this.settings.merged.selectedAuthType);
+        await config.refreshAuth(selectedAuthType);
         isAuthenticated = true;
       } catch (e) {
         console.error(`Authentication failed: ${e}`);
@@ -161,7 +171,7 @@ class GeminiAgent {
     sessionId: string,
     cwd: string,
     mcpServers: acp.McpServer[],
-  ): Promise<Config> {
+  ): Promise<[Config, AuthType | undefined]> {
     const mergedMcpServers = { ...this.settings.merged.mcpServers };
 
     for (const { command, args, env: rawEnv, name } of mcpServers) {
@@ -174,7 +184,7 @@ class GeminiAgent {
 
     const settings = { ...this.settings.merged, mcpServers: mergedMcpServers };
 
-    const config = await loadCliConfig(
+    const [config, selectedAuthType] = await loadCliConfig(
       settings,
       this.extensions,
       sessionId,
@@ -183,7 +193,7 @@ class GeminiAgent {
     );
 
     await config.initialize();
-    return config;
+    return [config, selectedAuthType];
   }
 
   async cancel(params: acp.CancelNotification): Promise<void> {

@@ -281,11 +281,17 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   useEffect(() => {
     if (settings.merged.selectedAuthType && !settings.merged.useExternalAuth) {
-      const error = validateAuthMethod(settings.merged.selectedAuthType);
-      if (error) {
-        setAuthError(error);
-        openAuthDialog();
-      }
+      const validate = async () => {
+        let error: string | null = null;
+        if (settings.merged.selectedAuthType) {
+          error = await validateAuthMethod(settings.merged.selectedAuthType);
+        }
+        if (error) {
+          setAuthError(error);
+          openAuthDialog();
+        }
+      };
+      validate();
     }
   }, [
     settings.merged.selectedAuthType,
@@ -600,9 +606,44 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   }, [buffer, userMessages, getQueuedMessagesText, clearQueue]);
 
   // Input handling - queue messages for processing
+  // Fix for message queue submission flow - add deduplication
+  const lastSubmittedMessageRef = useRef<string>('');
+  const submissionInProgressRef = useRef<boolean>(false);
+
   const handleFinalSubmit = useCallback(
     (submittedValue: string) => {
-      addMessage(submittedValue);
+      console.log(
+        '[DEBUG] App handleFinalSubmit called with:',
+        submittedValue.substring(0, 100),
+      );
+
+      // Fix: Prevent duplicate submissions
+      if (submissionInProgressRef.current) {
+        console.log(
+          '[DEBUG] handleFinalSubmit early return - submission in progress',
+        );
+        return;
+      }
+
+      // Fix: Prevent duplicate identical messages
+      if (submittedValue === lastSubmittedMessageRef.current) {
+        console.log(
+          '[DEBUG] handleFinalSubmit early return - duplicate message',
+        );
+        return;
+      }
+
+      submissionInProgressRef.current = true;
+      lastSubmittedMessageRef.current = submittedValue;
+
+      try {
+        addMessage(submittedValue);
+      } finally {
+        // Reset submission flag after a short delay to prevent rapid duplicates
+        setTimeout(() => {
+          submissionInProgressRef.current = false;
+        }, 100);
+      }
     },
     [addMessage],
   );
@@ -633,8 +674,11 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   );
 
   const { handleInput: vimHandleInput } = useVim(buffer, handleFinalSubmit);
-  const pendingHistoryItems = [...pendingSlashCommandHistoryItems];
-  pendingHistoryItems.push(...pendingGeminiHistoryItems);
+  const pendingHistoryItems = useMemo(() => {
+    const items = [...pendingSlashCommandHistoryItems];
+    items.push(...pendingGeminiHistoryItems);
+    return items;
+  }, [pendingSlashCommandHistoryItems, pendingGeminiHistoryItems]);
 
   const { elapsedTime, currentLoadingPhrase } =
     useLoadingIndicator(streamingState);
@@ -858,8 +902,31 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const initialPrompt = useMemo(() => config.getQuestion(), [config]);
   const geminiClient = config.getGeminiClient();
+  const isGeminiClientInitialized = geminiClient?.isInitialized?.();
+
+  // Fix for App.tsx useEffect dependencies - optimize dependencies and add deduplication
+  const initialPromptProcessedRef = useRef<string>('');
 
   useEffect(() => {
+    console.log('[DEBUG] App useEffect for initialPrompt triggered', {
+      initialPrompt: !!initialPrompt,
+      initialPromptSubmitted: initialPromptSubmitted.current,
+      isAuthenticating,
+      isAuthDialogOpen,
+      isThemeDialogOpen,
+      isEditorDialogOpen,
+      showPrivacyNotice,
+      geminiClientInitialized: isGeminiClientInitialized,
+    });
+
+    // Fix: Prevent processing the same initial prompt multiple times
+    if (initialPrompt && initialPrompt === initialPromptProcessedRef.current) {
+      console.log(
+        '[DEBUG] App useEffect early return - same initial prompt already processed',
+      );
+      return;
+    }
+
     if (
       initialPrompt &&
       !initialPromptSubmitted.current &&
@@ -868,8 +935,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       !isThemeDialogOpen &&
       !isEditorDialogOpen &&
       !showPrivacyNotice &&
-      geminiClient?.isInitialized?.()
+      isGeminiClientInitialized
     ) {
+      console.log('[DEBUG] App submitting initial prompt');
+      initialPromptProcessedRef.current = initialPrompt;
       submitQuery(initialPrompt);
       initialPromptSubmitted.current = true;
     }
@@ -881,7 +950,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     isThemeDialogOpen,
     isEditorDialogOpen,
     showPrivacyNotice,
-    geminiClient,
+    isGeminiClientInitialized,
   ]);
 
   if (quittingMessages) {

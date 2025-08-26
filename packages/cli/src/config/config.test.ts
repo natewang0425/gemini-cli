@@ -300,7 +300,7 @@ describe('loadCliConfig', () => {
     process.argv = ['node', 'script.js', '--show-memory-usage'];
     const argv = await parseArguments();
     const settings: Settings = {};
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getShowMemoryUsage()).toBe(true);
   });
 
@@ -308,7 +308,7 @@ describe('loadCliConfig', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = {};
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getShowMemoryUsage()).toBe(false);
   });
 
@@ -316,7 +316,7 @@ describe('loadCliConfig', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = { showMemoryUsage: false };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getShowMemoryUsage()).toBe(false);
   });
 
@@ -324,7 +324,7 @@ describe('loadCliConfig', () => {
     process.argv = ['node', 'script.js', '--show-memory-usage'];
     const argv = await parseArguments();
     const settings: Settings = { showMemoryUsage: false };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getShowMemoryUsage()).toBe(true);
   });
 
@@ -358,7 +358,7 @@ describe('loadCliConfig', () => {
       process.argv = ['node', 'script.js'];
       const argv = await parseArguments();
       const settings: Settings = {};
-      const config = await loadCliConfig(settings, [], 'test-session', argv);
+      const [config] = await loadCliConfig(settings, [], 'test-session', argv);
       expect(config.getProxy()).toBeFalsy();
     });
 
@@ -399,7 +399,12 @@ describe('loadCliConfig', () => {
         process.argv = ['node', 'script.js'];
         const argv = await parseArguments();
         const settings: Settings = {};
-        const config = await loadCliConfig(settings, [], 'test-session', argv);
+        const [config] = await loadCliConfig(
+          settings,
+          [],
+          'test-session',
+          argv,
+        );
         expect(config.getProxy()).toBe(expected);
       });
     });
@@ -408,7 +413,7 @@ describe('loadCliConfig', () => {
       process.argv = ['node', 'script.js', '--proxy', 'http://localhost:7890'];
       const argv = await parseArguments();
       const settings: Settings = {};
-      const config = await loadCliConfig(settings, [], 'test-session', argv);
+      const [config] = await loadCliConfig(settings, [], 'test-session', argv);
       expect(config.getProxy()).toBe('http://localhost:7890');
     });
 
@@ -417,7 +422,7 @@ describe('loadCliConfig', () => {
       process.argv = ['node', 'script.js', '--proxy', 'http://localhost:7890'];
       const argv = await parseArguments();
       const settings: Settings = {};
-      const config = await loadCliConfig(settings, [], 'test-session', argv);
+      const [config] = await loadCliConfig(settings, [], 'test-session', argv);
       expect(config.getProxy()).toBe('http://localhost:7890');
     });
   });
@@ -442,7 +447,7 @@ describe('loadCliConfig telemetry', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = {};
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryEnabled()).toBe(false);
   });
 
@@ -450,7 +455,7 @@ describe('loadCliConfig telemetry', () => {
     process.argv = ['node', 'script.js', '--telemetry'];
     const argv = await parseArguments();
     const settings: Settings = {};
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryEnabled()).toBe(true);
   });
 
@@ -458,7 +463,7 @@ describe('loadCliConfig telemetry', () => {
     process.argv = ['node', 'script.js', '--no-telemetry'];
     const argv = await parseArguments();
     const settings: Settings = {};
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryEnabled()).toBe(false);
   });
 
@@ -466,7 +471,7 @@ describe('loadCliConfig telemetry', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = { telemetry: { enabled: true } };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryEnabled()).toBe(true);
   });
 
@@ -474,7 +479,7 @@ describe('loadCliConfig telemetry', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = { telemetry: { enabled: false } };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryEnabled()).toBe(false);
   });
 
@@ -482,7 +487,7 @@ describe('loadCliConfig telemetry', () => {
     process.argv = ['node', 'script.js', '--telemetry'];
     const argv = await parseArguments();
     const settings: Settings = { telemetry: { enabled: false } };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryEnabled()).toBe(true);
   });
 
@@ -490,7 +495,7 @@ describe('loadCliConfig telemetry', () => {
     process.argv = ['node', 'script.js', '--no-telemetry'];
     const argv = await parseArguments();
     const settings: Settings = { telemetry: { enabled: true } };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryEnabled()).toBe(false);
   });
 
@@ -500,7 +505,7 @@ describe('loadCliConfig telemetry', () => {
     const settings: Settings = {
       telemetry: { otlpEndpoint: 'http://settings.example.com' },
     };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryOtlpEndpoint()).toBe(
       'http://settings.example.com',
     );
@@ -517,7 +522,7 @@ describe('loadCliConfig telemetry', () => {
     const settings: Settings = {
       telemetry: { otlpEndpoint: 'http://settings.example.com' },
     };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryOtlpEndpoint()).toBe('http://cli.example.com');
   });
 
@@ -525,7 +530,7 @@ describe('loadCliConfig telemetry', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = { telemetry: { enabled: true } };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryOtlpEndpoint()).toBe('http://localhost:4317');
   });
 
@@ -535,7 +540,7 @@ describe('loadCliConfig telemetry', () => {
     const settings: Settings = {
       telemetry: { target: ServerConfig.DEFAULT_TELEMETRY_TARGET },
     };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryTarget()).toBe(
       ServerConfig.DEFAULT_TELEMETRY_TARGET,
     );
@@ -547,7 +552,7 @@ describe('loadCliConfig telemetry', () => {
     const settings: Settings = {
       telemetry: { target: ServerConfig.DEFAULT_TELEMETRY_TARGET },
     };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryTarget()).toBe('gcp');
   });
 
@@ -555,7 +560,7 @@ describe('loadCliConfig telemetry', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = { telemetry: { enabled: true } };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryTarget()).toBe(
       ServerConfig.DEFAULT_TELEMETRY_TARGET,
     );
@@ -565,7 +570,7 @@ describe('loadCliConfig telemetry', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = { telemetry: { logPrompts: false } };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryLogPromptsEnabled()).toBe(false);
   });
 
@@ -573,7 +578,7 @@ describe('loadCliConfig telemetry', () => {
     process.argv = ['node', 'script.js', '--telemetry-log-prompts'];
     const argv = await parseArguments();
     const settings: Settings = { telemetry: { logPrompts: false } };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryLogPromptsEnabled()).toBe(true);
   });
 
@@ -581,7 +586,7 @@ describe('loadCliConfig telemetry', () => {
     process.argv = ['node', 'script.js', '--no-telemetry-log-prompts'];
     const argv = await parseArguments();
     const settings: Settings = { telemetry: { logPrompts: true } };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryLogPromptsEnabled()).toBe(false);
   });
 
@@ -589,7 +594,7 @@ describe('loadCliConfig telemetry', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = { telemetry: { enabled: true } };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryLogPromptsEnabled()).toBe(true);
   });
 
@@ -599,7 +604,7 @@ describe('loadCliConfig telemetry', () => {
     const settings: Settings = {
       telemetry: { otlpProtocol: 'http' },
     };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryOtlpProtocol()).toBe('http');
   });
 
@@ -609,7 +614,7 @@ describe('loadCliConfig telemetry', () => {
     const settings: Settings = {
       telemetry: { otlpProtocol: 'grpc' },
     };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryOtlpProtocol()).toBe('http');
   });
 
@@ -617,7 +622,7 @@ describe('loadCliConfig telemetry', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = { telemetry: { enabled: true } };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getTelemetryOtlpProtocol()).toBe('grpc');
   });
 
@@ -803,7 +808,7 @@ describe('mergeExcludeTools', () => {
     ];
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       extensions,
       'test-session',
@@ -830,7 +835,7 @@ describe('mergeExcludeTools', () => {
     ];
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       extensions,
       'test-session',
@@ -866,7 +871,7 @@ describe('mergeExcludeTools', () => {
     ];
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       extensions,
       'test-session',
@@ -884,7 +889,7 @@ describe('mergeExcludeTools', () => {
     const extensions: Extension[] = [];
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       extensions,
       'test-session',
@@ -899,7 +904,7 @@ describe('mergeExcludeTools', () => {
     const extensions: Extension[] = [];
     process.argv = ['node', 'script.js', '-p', 'test'];
     const argv = await parseArguments();
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       extensions,
       'test-session',
@@ -913,7 +918,7 @@ describe('mergeExcludeTools', () => {
     const argv = await parseArguments();
     const settings: Settings = { excludeTools: ['tool1', 'tool2'] };
     const extensions: Extension[] = [];
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       extensions,
       'test-session',
@@ -940,7 +945,7 @@ describe('mergeExcludeTools', () => {
     ];
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       extensions,
       'test-session',
@@ -990,7 +995,7 @@ describe('Approval mode tool exclusion logic', () => {
     const settings: Settings = {};
     const extensions: Extension[] = [];
 
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       extensions,
       'test-session',
@@ -1016,7 +1021,7 @@ describe('Approval mode tool exclusion logic', () => {
     const settings: Settings = {};
     const extensions: Extension[] = [];
 
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       extensions,
       'test-session',
@@ -1042,7 +1047,7 @@ describe('Approval mode tool exclusion logic', () => {
     const settings: Settings = {};
     const extensions: Extension[] = [];
 
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       extensions,
       'test-session',
@@ -1068,7 +1073,7 @@ describe('Approval mode tool exclusion logic', () => {
     const settings: Settings = {};
     const extensions: Extension[] = [];
 
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       extensions,
       'test-session',
@@ -1087,7 +1092,7 @@ describe('Approval mode tool exclusion logic', () => {
     const settings: Settings = {};
     const extensions: Extension[] = [];
 
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       extensions,
       'test-session',
@@ -1144,7 +1149,7 @@ describe('Approval mode tool exclusion logic', () => {
     const settings: Settings = { excludeTools: ['custom_tool'] };
     const extensions: Extension[] = [];
 
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       extensions,
       'test-session',
@@ -1209,7 +1214,12 @@ describe('loadCliConfig with allowed-mcp-server-names', () => {
   it('should allow all MCP servers if the flag is not provided', async () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
-    const config = await loadCliConfig(baseSettings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(
+      baseSettings,
+      [],
+      'test-session',
+      argv,
+    );
     expect(config.getMcpServers()).toEqual(baseSettings.mcpServers);
   });
 
@@ -1221,7 +1231,12 @@ describe('loadCliConfig with allowed-mcp-server-names', () => {
       'server1',
     ];
     const argv = await parseArguments();
-    const config = await loadCliConfig(baseSettings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(
+      baseSettings,
+      [],
+      'test-session',
+      argv,
+    );
     expect(config.getMcpServers()).toEqual({
       server1: { url: 'http://localhost:8080' },
     });
@@ -1237,7 +1252,12 @@ describe('loadCliConfig with allowed-mcp-server-names', () => {
       'server3',
     ];
     const argv = await parseArguments();
-    const config = await loadCliConfig(baseSettings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(
+      baseSettings,
+      [],
+      'test-session',
+      argv,
+    );
     expect(config.getMcpServers()).toEqual({
       server1: { url: 'http://localhost:8080' },
       server3: { url: 'http://localhost:8082' },
@@ -1254,7 +1274,12 @@ describe('loadCliConfig with allowed-mcp-server-names', () => {
       'server4',
     ];
     const argv = await parseArguments();
-    const config = await loadCliConfig(baseSettings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(
+      baseSettings,
+      [],
+      'test-session',
+      argv,
+    );
     expect(config.getMcpServers()).toEqual({
       server1: { url: 'http://localhost:8080' },
     });
@@ -1263,7 +1288,12 @@ describe('loadCliConfig with allowed-mcp-server-names', () => {
   it('should allow no MCP servers if the flag is provided but empty', async () => {
     process.argv = ['node', 'script.js', '--allowed-mcp-server-names', ''];
     const argv = await parseArguments();
-    const config = await loadCliConfig(baseSettings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(
+      baseSettings,
+      [],
+      'test-session',
+      argv,
+    );
     expect(config.getMcpServers()).toEqual({});
   });
 
@@ -1274,7 +1304,7 @@ describe('loadCliConfig with allowed-mcp-server-names', () => {
       ...baseSettings,
       allowMCPServers: ['server1', 'server2'],
     };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getMcpServers()).toEqual({
       server1: { url: 'http://localhost:8080' },
       server2: { url: 'http://localhost:8081' },
@@ -1288,7 +1318,7 @@ describe('loadCliConfig with allowed-mcp-server-names', () => {
       ...baseSettings,
       excludeMCPServers: ['server1', 'server2'],
     };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getMcpServers()).toEqual({
       server3: { url: 'http://localhost:8082' },
     });
@@ -1302,7 +1332,7 @@ describe('loadCliConfig with allowed-mcp-server-names', () => {
       excludeMCPServers: ['server1'],
       allowMCPServers: ['server1', 'server2'],
     };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getMcpServers()).toEqual({
       server2: { url: 'http://localhost:8081' },
     });
@@ -1321,7 +1351,7 @@ describe('loadCliConfig with allowed-mcp-server-names', () => {
       excludeMCPServers: ['server1'],
       allowMCPServers: ['server2'],
     };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getMcpServers()).toEqual({
       server1: { url: 'http://localhost:8080' },
     });
@@ -1346,7 +1376,7 @@ describe('loadCliConfig extensions', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = {};
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       mockExtensions,
       'test-session',
@@ -1362,7 +1392,7 @@ describe('loadCliConfig extensions', () => {
     process.argv = ['node', 'script.js', '--extensions', 'ext1'];
     const argv = await parseArguments();
     const settings: Settings = {};
-    const config = await loadCliConfig(
+    const [config] = await loadCliConfig(
       settings,
       mockExtensions,
       'test-session',
@@ -1453,7 +1483,7 @@ describe('loadCliConfig folderTrustFeature', () => {
     process.argv = ['node', 'script.js'];
     const settings: Settings = {};
     const argv = await parseArguments();
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getFolderTrustFeature()).toBe(false);
   });
 
@@ -1461,7 +1491,7 @@ describe('loadCliConfig folderTrustFeature', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = { folderTrustFeature: true };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getFolderTrustFeature()).toBe(true);
   });
 });
@@ -1488,7 +1518,7 @@ describe('loadCliConfig folderTrust', () => {
       folderTrust: false,
     };
     const argv = await parseArguments();
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getFolderTrust()).toBe(false);
   });
 
@@ -1496,7 +1526,7 @@ describe('loadCliConfig folderTrust', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = { folderTrustFeature: true, folderTrust: false };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getFolderTrust()).toBe(false);
   });
 
@@ -1504,7 +1534,7 @@ describe('loadCliConfig folderTrust', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = { folderTrustFeature: false, folderTrust: true };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getFolderTrust()).toBe(false);
   });
 
@@ -1512,7 +1542,7 @@ describe('loadCliConfig folderTrust', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = { folderTrustFeature: true, folderTrust: true };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getFolderTrust()).toBe(true);
   });
 });
@@ -1551,7 +1581,7 @@ describe('loadCliConfig with includeDirectories', () => {
         path.join(mockCwd, 'settings', 'path3'),
       ],
     };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     const expected = [
       mockCwd,
       path.resolve(path.sep, 'cli', 'path1'),
@@ -1592,7 +1622,7 @@ describe('loadCliConfig chatCompression', () => {
         contextPercentageThreshold: 0.5,
       },
     };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getChatCompression()).toEqual({
       contextPercentageThreshold: 0.5,
     });
@@ -1602,7 +1632,7 @@ describe('loadCliConfig chatCompression', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = {};
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getChatCompression()).toBeUndefined();
   });
 });
@@ -1626,7 +1656,7 @@ describe('loadCliConfig useRipgrep', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = {};
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getUseRipgrep()).toBe(false);
   });
 
@@ -1634,7 +1664,7 @@ describe('loadCliConfig useRipgrep', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = { useRipgrep: true };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getUseRipgrep()).toBe(true);
   });
 
@@ -1642,7 +1672,7 @@ describe('loadCliConfig useRipgrep', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = { useRipgrep: false };
-    const config = await loadCliConfig(settings, [], 'test-session', argv);
+    const [config] = await loadCliConfig(settings, [], 'test-session', argv);
     expect(config.getUseRipgrep()).toBe(false);
   });
 });
@@ -1669,7 +1699,7 @@ describe('loadCliConfig tool exclusions', () => {
     process.stdin.isTTY = true;
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.getExcludeTools()).not.toContain('run_shell_command');
     expect(config.getExcludeTools()).not.toContain('replace');
     expect(config.getExcludeTools()).not.toContain('write_file');
@@ -1679,7 +1709,7 @@ describe('loadCliConfig tool exclusions', () => {
     process.stdin.isTTY = true;
     process.argv = ['node', 'script.js', '--yolo'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.getExcludeTools()).not.toContain('run_shell_command');
     expect(config.getExcludeTools()).not.toContain('replace');
     expect(config.getExcludeTools()).not.toContain('write_file');
@@ -1689,7 +1719,7 @@ describe('loadCliConfig tool exclusions', () => {
     process.stdin.isTTY = false;
     process.argv = ['node', 'script.js', '-p', 'test'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.getExcludeTools()).toContain('run_shell_command');
     expect(config.getExcludeTools()).toContain('replace');
     expect(config.getExcludeTools()).toContain('write_file');
@@ -1699,7 +1729,7 @@ describe('loadCliConfig tool exclusions', () => {
     process.stdin.isTTY = false;
     process.argv = ['node', 'script.js', '-p', 'test', '--yolo'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.getExcludeTools()).not.toContain('run_shell_command');
     expect(config.getExcludeTools()).not.toContain('replace');
     expect(config.getExcludeTools()).not.toContain('write_file');
@@ -1728,7 +1758,7 @@ describe('loadCliConfig interactive', () => {
     process.stdin.isTTY = true;
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.isInteractive()).toBe(true);
   });
 
@@ -1736,7 +1766,7 @@ describe('loadCliConfig interactive', () => {
     process.stdin.isTTY = false;
     process.argv = ['node', 'script.js', '--prompt-interactive', 'test'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.isInteractive()).toBe(true);
   });
 
@@ -1744,7 +1774,7 @@ describe('loadCliConfig interactive', () => {
     process.stdin.isTTY = false;
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.isInteractive()).toBe(false);
   });
 
@@ -1752,7 +1782,7 @@ describe('loadCliConfig interactive', () => {
     process.stdin.isTTY = true;
     process.argv = ['node', 'script.js', '--prompt', 'test'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.isInteractive()).toBe(false);
   });
 });
@@ -1776,42 +1806,42 @@ describe('loadCliConfig approval mode', () => {
   it('should default to DEFAULT approval mode when no flags are set', async () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.DEFAULT);
   });
 
   it('should set YOLO approval mode when --yolo flag is used', async () => {
     process.argv = ['node', 'script.js', '--yolo'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.YOLO);
   });
 
   it('should set YOLO approval mode when -y flag is used', async () => {
     process.argv = ['node', 'script.js', '-y'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.YOLO);
   });
 
   it('should set DEFAULT approval mode when --approval-mode=default', async () => {
     process.argv = ['node', 'script.js', '--approval-mode', 'default'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.DEFAULT);
   });
 
   it('should set AUTO_EDIT approval mode when --approval-mode=auto_edit', async () => {
     process.argv = ['node', 'script.js', '--approval-mode', 'auto_edit'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.AUTO_EDIT);
   });
 
   it('should set YOLO approval mode when --approval-mode=yolo', async () => {
     process.argv = ['node', 'script.js', '--approval-mode', 'yolo'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.YOLO);
   });
 
@@ -1822,14 +1852,14 @@ describe('loadCliConfig approval mode', () => {
     const argv = await parseArguments();
     // Manually set yolo to true to simulate what would happen if validation didn't prevent it
     argv.yolo = true;
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.DEFAULT);
   });
 
   it('should fall back to --yolo behavior when --approval-mode is not set', async () => {
     process.argv = ['node', 'script.js', '--yolo'];
     const argv = await parseArguments();
-    const config = await loadCliConfig({}, [], 'test-session', argv);
+    const [config] = await loadCliConfig({}, [], 'test-session', argv);
     expect(config.getApprovalMode()).toBe(ServerConfig.ApprovalMode.YOLO);
   });
 });
@@ -1947,7 +1977,7 @@ describe('loadCliConfig trustedFolder', () => {
       });
       const argv = await parseArguments();
       const settings: Settings = { folderTrustFeature, folderTrust };
-      const config = await loadCliConfig(settings, [], 'test-session', argv);
+      const [config] = await loadCliConfig(settings, [], 'test-session', argv);
 
       expect(config.getFolderTrust()).toBe(expectedFolderTrust);
       expect(config.isTrustedFolder()).toBe(expectedIsTrustedFolder);

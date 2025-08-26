@@ -34,6 +34,9 @@ export function getLicenseDisplay(
     case AuthType.USE_VERTEX_AI:
       return 'Vertex AI';
 
+    case AuthType.USE_OPENAI:
+      return 'OpenAI API Key';
+
     case AuthType.CLOUD_SHELL:
       return 'Cloud Shell';
 

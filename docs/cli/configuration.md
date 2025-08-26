@@ -39,6 +39,27 @@ In addition to a project settings file, a project's `.gemini` directory can cont
 
 ### Available settings in `settings.json`:
 
+- **`openaiApiKey`** (string):
+  - **Description:** Your OpenAI API key for authentication with OpenAI models.
+  - **Default:** None
+  - **Example:** `"openaiApiKey": "sk-your-api-key-here"`
+  - **Note:** Can reference environment variables using `$OPENAI_API_KEY` syntax.
+
+- **`openaiModel`** (string):
+  - **Description:** Default OpenAI model to use (e.g., gpt-4, gpt-3.5-turbo).
+  - **Default:** None
+  - **Example:** `"openaiModel": "gpt-4"`
+
+- **`openaiGatewayUrl`** (string):
+  - **Description:** Custom API endpoint for OpenAI-compatible services (e.g., Azure OpenAI).
+  - **Default:** None
+  - **Example:** `"openaiGatewayUrl": "https://your-azure-endpoint.openai.azure.com"`
+
+- **`openaiModelVersion`** (string):
+  - **Description:** Specific model version for OpenAI models, useful for Azure OpenAI deployments.
+  - **Default:** None
+  - **Example:** `"openaiModelVersion": "2024-02-15-preview"`
+
 - **`contextFileName`** (string or array of strings):
   - **Description:** Specifies the filename for context files (e.g., `GEMINI.md`, `AGENTS.md`). Can be a single filename or a list of accepted filenames.
   - **Default:** `GEMINI.md`
@@ -338,6 +359,10 @@ If you are experiencing performance issues with file searching (e.g., with `@` c
 
 ```json
 {
+  "openaiApiKey": "$OPENAI_API_KEY",
+  "openaiModel": "gpt-4",
+  "openaiGatewayUrl": "https://your-azure-endpoint.openai.azure.com",
+  "openaiModelVersion": "2024-02-15-preview",
   "theme": "GitHub",
   "sandbox": "docker",
   "toolDiscoveryCommand": "bin/get_tools",
@@ -400,6 +425,21 @@ The CLI automatically loads environment variables from an `.env` file. The loadi
   - Specifies the default Gemini model to use.
   - Overrides the hardcoded default
   - Example: `export GEMINI_MODEL="gemini-2.5-flash"`
+- **`OPENAI_API_KEY`**:
+  - Your API key for the OpenAI API.
+  - Required for using OpenAI models (GPT-4, GPT-3.5-turbo, etc.).
+  - Get your key from [OpenAI Platform](https://platform.openai.com/api-keys).
+  - Example: `export OPENAI_API_KEY="sk-your-api-key-here"`
+- **`OPENAI_MODEL`**:
+  - Specifies the default OpenAI model to use.
+  - Example: `export OPENAI_MODEL="gpt-4"`
+- **`OPENAI_GATEWAY_URL`**:
+  - Custom API endpoint for OpenAI-compatible services (e.g., Azure OpenAI).
+  - Example: `export OPENAI_GATEWAY_URL="https://your-azure-endpoint.openai.azure.com"`
+- **`OPENAI_MODEL_VERSION`**:
+  - Specific model version for OpenAI models.
+  - Useful for Azure OpenAI deployments.
+  - Example: `export OPENAI_MODEL_VERSION="2024-02-15-preview"`
 - **`GOOGLE_API_KEY`**:
   - Your Google Cloud API key.
   - Required for using Vertex AI in express mode.
@@ -447,6 +487,18 @@ Arguments passed directly when running the CLI can override other configurations
 - **`--model <model_name>`** (**`-m <model_name>`**):
   - Specifies the Gemini model to use for this session.
   - Example: `npm start -- --model gemini-1.5-pro-latest`
+- **`--openai-api-key <api_key>`**:
+  - Specifies the OpenAI API key for this session.
+  - Example: `gemini --openai-api-key "sk-your-api-key-here"`
+- **`--openai-model <model_name>`**:
+  - Specifies the OpenAI model to use for this session.
+  - Example: `gemini --openai-model gpt-4`
+- **`--openai-gateway-url <url>`**:
+  - Specifies a custom OpenAI API endpoint for this session.
+  - Example: `gemini --openai-gateway-url "https://your-azure-endpoint.openai.azure.com"`
+- **`--openai-model-version <version>`**:
+  - Specifies the OpenAI model version for this session.
+  - Example: `gemini --openai-model-version "2024-02-15-preview"`
 - **`--prompt <your_prompt>`** (**`-p <your_prompt>`**):
   - Used to pass a prompt directly to the command. This invokes Gemini CLI in a non-interactive mode.
 - **`--prompt-interactive <your_prompt>`** (**`-i <your_prompt>`**):

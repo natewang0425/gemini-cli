@@ -6,8 +6,11 @@
 
 import { AuthType } from '@google/gemini-cli-core';
 import { loadEnvironment } from './settings.js';
+import * as readline from 'node:readline/promises';
 
-export const validateAuthMethod = (authMethod: string): string | null => {
+export const validateAuthMethod = async (
+  authMethod: string,
+): Promise<string | null> => {
   loadEnvironment();
   if (
     authMethod === AuthType.LOGIN_WITH_GOOGLE ||
@@ -47,6 +50,22 @@ export const validateAuthMethod = (authMethod: string): string | null => {
         '• GOOGLE_API_KEY environment variable (if using express mode).\n' +
         'Update your environment and try again (no reload needed if using .env)!'
       );
+    }
+    return null;
+  }
+
+  if (authMethod === AuthType.USE_OPENAI) {
+    if (!process.env['OPENAI_API_KEY']) {
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+      const apiKey = await rl.question('Please enter your OpenAI API key: ');
+      rl.close();
+      if (!apiKey) {
+        return 'OPENAI_API_KEY not provided.';
+      }
+      process.env['OPENAI_API_KEY'] = apiKey;
     }
     return null;
   }
